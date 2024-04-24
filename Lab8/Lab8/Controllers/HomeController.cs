@@ -2,6 +2,7 @@ using Lab8.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace Lab8.Controllers
 {
@@ -109,6 +110,106 @@ namespace Lab8.Controllers
                     break;
             }
             return fractions;
+        }
+        [HttpGet]
+        public IActionResult Cars(string src, string actionCar)
+        {
+            List<Car>? cars = null;
+            if (actionCar == "save" && src != null && src.Length > 0 && src.EndsWith(".txt"))
+            {
+                using (StreamWriter sw = new StreamWriter(src, false, System.Text.Encoding.Unicode))
+                {
+                    cars = GetCars();
+                    sw.Write(JsonConvert.SerializeObject(cars));
+                }
+            }
+            else
+            {
+                string json = "";
+                if (src != null && src.Length > 0 && src.EndsWith(".txt"))
+                {
+                    using (StreamReader sr = new StreamReader(src, System.Text.Encoding.Unicode))
+                    {
+                        json = sr.ReadToEnd();
+                    }
+                }
+                cars = JsonConvert.DeserializeObject<List<Car>>(json);
+                if (cars is null)
+                    cars = GetCars();
+                else
+                {
+                    SetCarsCookie(cars);
+                }
+            }
+            return View(cars);
+        }
+
+        public void SetCarsCookie(List<Car> cars)
+        {
+            Response.Cookies.Append("cars", JsonConvert.SerializeObject(cars), new CookieOptions() { Expires = (DateTimeOffset.Now.AddDays(1)) });
+        }
+
+        [HttpPost]
+        public IActionResult PutCar(int id, string action)
+        {
+            if(action == "add")
+            {
+                return View(new Car());
+            }
+            List<Car> cars = GetCars();
+            Car car = cars.FirstOrDefault(x => x.Id == id);
+            return View(car);
+        }
+        [HttpPost]
+        public IActionResult PutCurrentCar(int id, string name, string color, string publisher, int year, int engine, string action)
+        {
+            List<Car> cars = GetCars();
+            int index = cars.FindIndex(x => x.Id == id);
+            if (action == "delete")
+            {
+                cars.RemoveAt(index);
+            }
+            else
+            {
+                cars[index].Name = name;
+                cars[index].Color = color;
+                cars[index].Publisher = publisher;
+                cars[index].Year = year;
+                cars[index].EngineCapacity = engine;
+            }
+            SetCarsCookie(cars);
+            return View("Cars", cars);
+        }
+
+        public IActionResult AddCar(string name, string color, string publisher, int year, int engine)
+        {
+            List<Car> cars = GetCars();
+            cars.Add(new Car()
+            {
+                Name = name,
+                Color = color,
+                Publisher = publisher,
+                Year = year,
+                EngineCapacity = engine
+            });
+            List<int> ids = cars.Select(x => x.Id).ToList();
+            int id = 0;
+            while (ids.Contains(id)){
+                id++;
+            }
+            cars.Last().Id = id;
+            SetCarsCookie(cars);
+            return View("Cars", cars);
+        }
+
+        public List<Car>? GetCars()
+        {
+            string cookie = Request.Cookies["cars"];
+            if (cookie != null && cookie != "")
+            {
+                return JsonConvert.DeserializeObject<List<Car>>(cookie);
+            }
+            return new List<Car>();
         }
 
         public IActionResult Privacy()

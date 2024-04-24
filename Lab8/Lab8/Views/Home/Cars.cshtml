@@ -1,0 +1,75 @@
+﻿@using Lab8.Models;
+@model List<Car>
+@{
+    ViewBag.Title = "Cars";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <form action="Cars" method="get">
+        <div class="mb-3">
+            <label for="filePath" class="form-label">Path:</label>
+            <input type="file" class="form-control" name="src" accept=".txt">
+        </div>
+        <div class="justify-content-between flex-grow-1 d-flex">
+            <input type="hidden" name="actionCar" id="action" value="show" />
+            <button type="submit" class="btn btn-primary">Show</button>
+            <button class="btn btn-primary" onclick="btnClick()">Save</button>
+        </div>
+    </form>
+</div>
+
+@if (Model is not null)
+{
+    <div class="container mt-5">
+        <h2>Cars</h2>
+        <table class="table table-bordered table-info table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Color</th>
+                    <th scope="col">Publisher</th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Engine capacity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <form action="PutCar" method="post" id="form">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                    <tr onclick="thClick(event)">
+                        <th scope="row">@Model[i].Id</th>
+                        <td>@Model[i].Name</td>
+                        <td>@Model[i].Color</td>
+                        <td>@Model[i].Publisher</td>
+                        <td>@Model[i].Year</td>
+                        <td>@Model[i].EngineCapacity</td>
+                    </tr>
+                    }
+                <input type="hidden" name="id" id="id" />
+                <input type="hidden" name="action" id="put-action" />
+                </form>
+            </tbody>
+        </table>
+        <button class="btn btn-primary" onclick="addClick()">Add car</button>
+    </div>
+}
+
+<script name="Scripts">
+    function thClick(event) {
+        document.querySelector("#id").value = event.target.parentElement.cells[0].innerText;
+        document.querySelector("#form").submit();
+    }
+
+    function addClick() {
+        document.querySelector("#put-action").value = "add";
+        document.querySelector("#form").submit();
+    }
+
+    function btnClick(event) {
+        document.querySelector("#action").value = "save";
+        document.querySelector("#form").submit();
+    }
+</script>
