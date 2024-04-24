@@ -1,0 +1,88 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model List<Fraction>
+@{
+    string num = "";
+    string denum = "";
+    string num1 = "";
+    string num2 = "";
+    string denum1 = "";
+    string denum2 = "";
+    string result = "";
+    if (Model is not null)
+    {
+        if (Model.Count == 1)
+        {
+            num = Model[0].Numerator.ToString();
+            denum = Model[0].Denominator.ToString();
+        }
+        if (Model.Count == 2)
+        {
+            num1 = Model[0].Numerator.ToString();
+            num2 = Model[1].Numerator.ToString();
+            denum1 = Model[0].Denominator.ToString();
+            denum2 = Model[1].Denominator.ToString();
+        }
+        if (Model.Count == 3)
+        {
+            num1 = Model[0].Numerator.ToString();
+            num2 = Model[1].Numerator.ToString();
+            denum1 = Model[0].Denominator.ToString();
+            denum2 = Model[1].Denominator.ToString();
+            result = Model[2].ToString();
+        }
+        else
+        {
+            result = "Incorrect entry";
+        }
+    }
+}
+
+<style>
+    input[type="number"]{
+        width: 50px;
+    }
+</style>
+
+<h2>Counting</h2>
+
+<form method="post">
+
+    <input type="number" name="numerator1" value="@num1" />
+    /
+    <input type="number" name="denominator1" value="@denum1" />
+    <select name="action">
+        <option value="+"> +</option>
+        <option value="-"> -</option>
+        <option value="*"> *</option>
+        <option value="/">/</option>
+    </select>
+    <input type="number" name="numerator2" value="@num2" />
+    /
+    <input type="number" name="denominator2" value="@denum2" />
+    <button type="submit">=</button>
+    @if (Model != null && Model.Count >= 3)
+    {
+        <input type="text" readonly value="@result" />
+    }
+    <br />
+    <input type="checkbox" name="reduce" />
+    <label for="reduce">Reduce</label>
+</form>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<h2>Reduce</h2>
+<form asp-action="Reduce" method="post">
+    <input type="number" name="numerator" value="@num" />
+    /
+    <input type="number" name="denominator" value="@denum" />
+    <button type="submit">Reduce</button>
+</form>
