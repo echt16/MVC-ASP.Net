@@ -7,10 +7,11 @@ namespace Lab9.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private ShopDbContext Context { get; set; }
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ShopDbContext db)
         {
-            _logger = logger;
+            Context = db;
         }
 
         public IActionResult Index()
