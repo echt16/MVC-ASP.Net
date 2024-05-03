@@ -1,0 +1,38 @@
+﻿.modal-window {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index:10000;
+}
+
+.p-absolute {
+    position: absolute;
+    top: 60px;
+    left: 0;
+}
+
+.bg-green {
+    background-color: rgb(64, 179, 162);
+}
+
+.modal-background {
+    background-color: rgba(101, 158, 188, 0.5);
+    z-index: -1;
+}
+
+.br-50{
+    border-radius: 50px;
+}
+
+.in-full-screen {
+    width: 100%;
+    height: calc(100vh - 120px);
+}
+
+main{
+    height: 100%;
+}
+
+footer, header {
+    height: 60px;
+}

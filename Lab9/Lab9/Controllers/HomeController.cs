@@ -16,6 +16,11 @@ namespace Lab9.Controllers
 
         public IActionResult Index()
         {
+            return View("Authorization");
+        }
+
+        public IActionResult Registration()
+        {
             return View();
         }
 
