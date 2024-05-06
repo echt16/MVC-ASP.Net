@@ -16,7 +16,13 @@ namespace Lab9.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            ProductViewModel model = new ProductViewModel()
+            {
+                Products = Context.Products.ToList(),
+                Kinds = Context.Kinds.ToList(),
+                Categories = Context.Categories.ToList(),
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -125,6 +131,29 @@ namespace Lab9.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [HttpGet]
+        public IActionResult ProductDetails(int productId)
+        {
+            ProductDetailsViewModel model = new ProductDetailsViewModel()
+            {
+                Product = Context.Products.First(x => x.Id == productId),
+                Photos = Context.Photos.Where(x => x.ProductId == productId).ToList()
+            };
+
+            Kind kind = Context.Kinds.First(x => x.Id == model.Product.KindId);
+            string category = Context.Categories.First(x => x.Id == kind.CategoryId).Name;
+            string kindStr = kind.Name;
+
+            Seller seller = Context.Sellers.First(x => x.Id == model.Product.SellerId);
+
+            model.Seller = seller;
+
+            model.Kind = kindStr;
+            model.Category = category;
+
+            return View(model);
         }
     }
 }

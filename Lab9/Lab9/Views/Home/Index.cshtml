@@ -1,8 +1,43 @@
-﻿@{
+﻿@model ProductViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<link href="~/css/productsStyles.css" rel="stylesheet" />
+
+<style>
+
+</style>
+
+<div class="in-full-screen modal-background p-absolute br-50">
+</div>
+
+<div class="br-50">
+    <div class="products">
+        @foreach (var item in Model.Products)
+        {
+            <div class="card">
+                <div class="product">
+                    <img src="@item.LogoSource" class="img" alt="Product">
+                    <div class="last-element">
+                        <span>@item.Name</span>
+                    </div>
+                </div>
+                <div class="description">
+                    <a class="details" asp-route-productId="@item.Id" asp-controller="Home" asp-action="ProductDetails">Details</a>
+                    <div class="maxheight-80 flex-grow d-flex flex-column">
+                        <span>@item.Name</span>
+                        <div class="descr flex-grow">
+                            <span>@Model.Categories.First(x => x.Id == Model.Kinds.First(x => x.Id == item.KindId).Id).Name</span>
+                            <span>@Model.Kinds.First(x => x.Id == item.KindId).Name</span>
+                            <div class="price flex-grow">
+                                <span>@item.Price</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="bg-green a-btn" asp-route-productId="@item.Id" asp-controller="Home" asp-action="AddToCart">Add to cart</a>
+                </div>
+            </div>
+        }
+    </div>
 </div>
