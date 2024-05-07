@@ -10,42 +10,59 @@
 <div class="in-full-screen modal-background p-absolute br-50">
 </div>
 
-<div class="container mt-2">
-    <div id="myCarousel" class="carousel slide" data-ride="carousel">
-        <ul class="carousel-indicators">
-            <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-            @for (int i = 1; i < Model.Photos.Count; i++)
-            {
-                <li data-target="#myCarousel" data-slide-to="@i"></li>
-            }
-        </ul>
-        <div class="carousel-inner">
-            @if (Model.Photos.Count == 0)
-            {
-                <div class="carousel-item active carousel-image">
-                    <img src="https://via.placeholder.com/800x400?text=Slide+1" alt="Slide 1">
+<div class="details-top-part">
+    <div class="carousel-conteiner">
+        <div class="container mt-2">
+            <div id="myCarousel" class="carousel slide" data-ride="carousel">
+                <ul class="carousel-indicators">
+                    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                    @for (int i = 1; i < Model.Photos.Count; i++)
+                    {
+                        <li data-target="#myCarousel" data-slide-to="@i"></li>
+                    }
+                </ul>
+                <div class="carousel-inner">
+                    @if (Model.Photos.Count == 0)
+                    {
+                        <div class="carousel-item active carousel-image">
+                            <img src="https://via.placeholder.com/800x400?text=Slide+1" alt="Slide 1">
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="carousel-item active carousel-image">
+                            <img src="@Model.Photos[0].Source" alt="Slide">
+                        </div>
+                    }
+                    @for (int i = 1; i < Model.Photos.Count; i++)
+                    {
+                        <div class="carousel-item carousel-image">
+                            <img src="@Model.Photos[i].Source" alt="Slide">
+                        </div>
+                    }
                 </div>
-            }
-            else
-            {
-                <div class="carousel-item active carousel-image">
-                    <img src="@Model.Photos[0].Source" alt="Slide">
-                </div>
-            }
-            @for (int i = 1; i < Model.Photos.Count; i++)
-            {
-                <div class="carousel-item carousel-image">
-                    <img src="@Model.Photos[i].Source" alt="Slide">
-                </div>
-            }
+                <a class="carousel-control-prev" href="#myCarousel" data-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next" href="#myCarousel" data-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </a>
+            </div>
         </div>
-        <a class="carousel-control-prev" href="#myCarousel" data-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </a>
-        <a class="carousel-control-next" href="#myCarousel" data-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </a>
     </div>
+    <div class="data">
+        <h2>@Model.Product.Name</h2>
+        <hr />
+        <span>@Model.Product.Price</span>
+        <span>@Model.Category</span>
+        <span>@Model.Kind</span>
+        <span>@(Model.Seller.FirstName + " " + Model.Seller.LastName)</span>
+        <a class="bg-green a-btn" asp-route-productId="@Model.Product.Id" asp-controller="Home" asp-action="AddToCart">Add to cart</a>
+    </div>
+</div>
+
+<div class="details-description">
+    <p>@Model.Product.Description</p>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

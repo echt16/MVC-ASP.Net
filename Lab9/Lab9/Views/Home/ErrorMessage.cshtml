@@ -1,0 +1,14 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model string
+@{
+}
+
+<div class="in-full-screen modal-background p-absolute br-50 d-flex align-items-center">
+    @if (Model != "" && Model != null)
+    {
+        <p class="alert alert-danger error-message text-center" style="border-top-left-radius: 50px;border-top-right-radius: 50px;">@Model</p>
+    }
+</div>
+

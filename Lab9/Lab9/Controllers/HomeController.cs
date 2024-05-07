@@ -1,6 +1,14 @@
 using Lab9.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Lab9.Controllers
 {
@@ -25,7 +33,7 @@ namespace Lab9.Controllers
             return View(model);
         }
 
-        [HttpPost]
+        /*[HttpPost]
         public IActionResult Authorization(string email, string password, string role)
         {
             if (role == "" || role == null)
@@ -41,8 +49,14 @@ namespace Lab9.Controllers
                 }
                 else
                 {
-                    Response.Cookies.Append("seller", "seller-" + res.First().SellerId.ToString());
-                    return View("Index");
+                    Response.Cookies.Append("user", "seller-" + res.First().SellerId.ToString());
+                    ProductViewModel model = new ProductViewModel()
+                    {
+                        Products = Context.Products.ToList(),
+                        Kinds = Context.Kinds.ToList(),
+                        Categories = Context.Categories.ToList(),
+                    };
+                    return View("Index", model);
                 }
             }
             else if (role == "customer")
@@ -55,11 +69,107 @@ namespace Lab9.Controllers
                 else
                 {
                     Response.Cookies.Append("user", "customer-" + res.First().CustomerId.ToString());
-                    return View("Index");
+                    ProductViewModel model = new ProductViewModel()
+                    {
+                        Products = Context.Products.ToList(),
+                        Kinds = Context.Kinds.ToList(),
+                        Categories = Context.Categories.ToList(),
+                    };
+                    return View("Index", model);
                 }
             }
             return View();
+        }*/
+
+        [HttpPost]
+        public IActionResult Authorization(string email, string password, string role)
+        {
+            if (role == "" || role == null)
+            {
+                return View("Authorization", "Enter a role");
+            }
+            if (role == "seller")
+            {
+                LoginPassword loginPassword = Context.LoginsPasswords.FirstOrDefault(x => x.Login == email && x.Password == password);
+                if (loginPassword == null)
+                {
+                    return View("Authorization", "Not found");
+                }
+                else
+                {
+                    int userId = Context.Users.First(x => x.LoginPasswordId == loginPassword.Id).Id;
+                    Seller seller = Context.Sellers.FirstOrDefault(x => x.UserId == userId);
+                    if (seller != null)
+                    {
+                        var token = GenerateToken(seller.Id, "seller");
+                        return Ok(new { token });
+                    }
+                    else
+                        return View("Authorization", "Not found");
+                }
+            }
+            else if (role == "customer")
+            {
+                LoginPassword loginPassword = Context.LoginsPasswords.FirstOrDefault(x => x.Login == email && x.Password == password);
+                if (loginPassword == null)
+                {
+                    return View("Authorization", "Not found");
+                }
+                else
+                {
+                    int userId = Context.Users.First(x => x.LoginPasswordId == loginPassword.Id).Id;
+                    Customer customer = Context.Customers.FirstOrDefault(x => x.UserId == userId);
+                    if (customer != null)
+                    {
+                        var token = GenerateToken(customer.Id, "customer");
+                        return Ok(new { token });
+                    }
+                    else
+                        return View("Authorization", "Not found");
+                }
+            }
+            return View("Authorization", "Error");
         }
+
+        private string GenerateToken(int userId, string role)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(GenerateRandomSecretKey(32));
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public static string GenerateRandomSecretKey(int length)
+        {
+            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            StringBuilder stringBuilder = new StringBuilder();
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                byte[] uintBuffer = new byte[sizeof(uint)];
+
+                while (length-- > 0)
+                {
+                    rng.GetBytes(uintBuffer);
+                    uint num = BitConverter.ToUInt32(uintBuffer, 0);
+                    stringBuilder.Append(validChars[(int)(num % (uint)validChars.Length)]);
+                }
+            }
+            return stringBuilder.ToString();
+        }
+
 
         [HttpGet]
         public IActionResult Authorization()
@@ -72,7 +182,11 @@ namespace Lab9.Controllers
         {
             if (password != password2)
             {
-                return View("Authorization", "Password mismatch");
+                return View("Registration", "Password mismatch");
+            }
+            if (Context.LoginsPasswords.Select(x => x.Login).FirstOrDefault(x => x == email) != null)
+            {
+                return View("Registration", "Email already exists");
             }
             else
             {
@@ -80,7 +194,19 @@ namespace Lab9.Controllers
                     await RegisterSellerAsync(email, password, firstname, lastname);
                 else if (role == "customer")
                     await RegisterCustomerAsync(email, password, firstname, lastname);
-                return View("Index");
+                ProductViewModel model = null;
+                bool b = false;
+                do
+                {
+                    b = Monitor.TryEnter(Context, 5000);
+                    model = new ProductViewModel()
+                    {
+                        Products = Context.Products.ToList(),
+                        Kinds = Context.Kinds.ToList(),
+                        Categories = Context.Categories.ToList(),
+                    };
+                } while (!b);
+                return View("Index", model);
             }
         }
 
@@ -88,9 +214,14 @@ namespace Lab9.Controllers
         {
             await Task.Run(() =>
             {
-                int userId = GetUserId(email, password, firstname, lastname).Result;
-                Context.Sellers.Add(new Seller() { UserId = userId });
-                Context.SaveChanges();
+                bool b = false;
+                do
+                {
+                    b = Monitor.TryEnter(Context, 5000);
+                    int userId = GetUserId(email, password, firstname, lastname).Result;
+                    Context.Sellers.Add(new Seller() { UserId = userId });
+                    Context.SaveChanges();
+                } while (!b);
             });
         }
 
@@ -98,9 +229,14 @@ namespace Lab9.Controllers
         {
             await Task.Run(() =>
             {
-                int userId = GetUserId(email, password, firstname, lastname).Result;
-                Context.Customers.Add(new Customer() { UserId = userId });
-                Context.SaveChanges();
+                bool b = false;
+                do
+                {
+                    b = Monitor.TryEnter(Context, 5000);
+                    int userId = GetUserId(email, password, firstname, lastname).Result;
+                    Context.Customers.Add(new Customer() { UserId = userId });
+                    Context.SaveChanges();
+                } while (!b);
             });
         }
 
@@ -115,6 +251,38 @@ namespace Lab9.Controllers
             return userId;
         }
 
+        public IActionResult AddToCart(int productId)
+        {
+            string? userCookie = Request.Cookies["user"];
+            if (userCookie == null || userCookie == "")
+            {
+                return View("Authorization");
+            }
+            if (userCookie.StartsWith("seller"))
+            {
+                return View("ErrorMessage", "Register as customer");
+            }
+            int customerId = int.Parse(userCookie.Split("-")[1]);
+            _ = AddToAddedToCartAsync(productId, customerId);
+            ProductViewModel model = new ProductViewModel()
+            {
+                Products = Context.Products.ToList(),
+                Kinds = Context.Kinds.ToList(),
+                Categories = Context.Categories.ToList(),
+            };
+            return View("Index", model);
+        }
+
+        public async Task AddToAddedToCartAsync(int productId, int customerId)
+        {
+            Context.AddedToCartProducts.Add(new AddedToCartProduct()
+            {
+                CustomerId = customerId,
+                ProductId = productId,
+                DateTime = DateTime.Now
+            });
+            await Context.SaveChangesAsync();
+        }
 
         [HttpGet]
         public IActionResult Registration()
@@ -134,6 +302,7 @@ namespace Lab9.Controllers
         }
 
         [HttpGet]
+        [CustomerAuthorize]
         public IActionResult ProductDetails(int productId)
         {
             ProductDetailsViewModel model = new ProductDetailsViewModel()
@@ -146,7 +315,7 @@ namespace Lab9.Controllers
             string category = Context.Categories.First(x => x.Id == kind.CategoryId).Name;
             string kindStr = kind.Name;
 
-            Seller seller = Context.Sellers.First(x => x.Id == model.Product.SellerId);
+            User seller = Context.Users.First(x => x.Id == Context.Sellers.First(x => x.Id == model.Product.SellerId).UserId);
 
             model.Seller = seller;
 
@@ -154,6 +323,24 @@ namespace Lab9.Controllers
             model.Category = category;
 
             return View(model);
+        }
+    }
+}
+
+public class CustomerAuthorizeAttribute : Attribute, IAuthorizationFilter
+{
+    public void OnAuthorization(AuthorizationFilterContext context)
+    {
+        if (!context.HttpContext.User.Identity.IsAuthenticated)
+        {
+            context.Result = new UnauthorizedResult();
+            return;
+        }
+
+        if (!context.HttpContext.User.IsInRole("customer"))
+        {
+            context.Result = new ForbidResult();
+            return;
         }
     }
 }
