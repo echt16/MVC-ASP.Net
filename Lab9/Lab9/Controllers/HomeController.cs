@@ -9,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Lab9.Controllers
 {
@@ -101,8 +102,20 @@ namespace Lab9.Controllers
                     Seller seller = Context.Sellers.FirstOrDefault(x => x.UserId == userId);
                     if (seller != null)
                     {
-                        var token = GenerateToken(seller.Id, "seller");
-                        return Ok(new { token });
+                        var obj = AuthorizationJWT.GenerateToken(seller.Id, "seller");
+                        string token = obj[0] as string;
+                        byte[] key = obj[1] as byte[];
+                        CookieOptions co = new CookieOptions();
+                        co.Expires = DateTimeOffset.Now.AddDays(1);
+                        Response.Cookies.Append("token", token, co);
+                        Response.Cookies.Append("key", JsonConvert.SerializeObject(key), co);
+                        ProductViewModel model = new ProductViewModel()
+                        {
+                            Products = Context.Products.ToList(),
+                            Kinds = Context.Kinds.ToList(),
+                            Categories = Context.Categories.ToList(),
+                        };
+                        return View("Index", model);
                     }
                     else
                         return View("Authorization", "Not found");
@@ -121,8 +134,20 @@ namespace Lab9.Controllers
                     Customer customer = Context.Customers.FirstOrDefault(x => x.UserId == userId);
                     if (customer != null)
                     {
-                        var token = GenerateToken(customer.Id, "customer");
-                        return Ok(new { token });
+                        var obj = AuthorizationJWT.GenerateToken(customer.Id, "customer");
+                        string token = obj[0] as string;
+                        byte[] key = obj[1] as byte[];
+                        CookieOptions co = new CookieOptions();
+                        co.Expires = DateTimeOffset.Now.AddDays(1);
+                        Response.Cookies.Append("token", token, co);
+                        Response.Cookies.Append("key", JsonConvert.SerializeObject(key), co);
+                        ProductViewModel model = new ProductViewModel()
+                        {
+                            Products = Context.Products.ToList(),
+                            Kinds = Context.Kinds.ToList(),
+                            Categories = Context.Categories.ToList(),
+                        };
+                        return View("Index", model);
                     }
                     else
                         return View("Authorization", "Not found");
@@ -131,44 +156,6 @@ namespace Lab9.Controllers
             return View("Authorization", "Error");
         }
 
-        private string GenerateToken(int userId, string role)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Role, role)
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(GenerateRandomSecretKey(32));
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
-        public static string GenerateRandomSecretKey(int length)
-        {
-            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            StringBuilder stringBuilder = new StringBuilder();
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
-            {
-                byte[] uintBuffer = new byte[sizeof(uint)];
-
-                while (length-- > 0)
-                {
-                    rng.GetBytes(uintBuffer);
-                    uint num = BitConverter.ToUInt32(uintBuffer, 0);
-                    stringBuilder.Append(validChars[(int)(num % (uint)validChars.Length)]);
-                }
-            }
-            return stringBuilder.ToString();
-        }
 
 
         [HttpGet]
@@ -194,19 +181,7 @@ namespace Lab9.Controllers
                     await RegisterSellerAsync(email, password, firstname, lastname);
                 else if (role == "customer")
                     await RegisterCustomerAsync(email, password, firstname, lastname);
-                ProductViewModel model = null;
-                bool b = false;
-                do
-                {
-                    b = Monitor.TryEnter(Context, 5000);
-                    model = new ProductViewModel()
-                    {
-                        Products = Context.Products.ToList(),
-                        Kinds = Context.Kinds.ToList(),
-                        Categories = Context.Categories.ToList(),
-                    };
-                } while (!b);
-                return View("Index", model);
+                return View("Authorization");
             }
         }
 
@@ -221,6 +196,8 @@ namespace Lab9.Controllers
                     int userId = GetUserId(email, password, firstname, lastname).Result;
                     Context.Sellers.Add(new Seller() { UserId = userId });
                     Context.SaveChanges();
+                    if (b)
+                        Monitor.Exit(Context);
                 } while (!b);
             });
         }
@@ -236,6 +213,8 @@ namespace Lab9.Controllers
                     int userId = GetUserId(email, password, firstname, lastname).Result;
                     Context.Customers.Add(new Customer() { UserId = userId });
                     Context.SaveChanges();
+                    if (b)
+                        Monitor.Exit(Context);
                 } while (!b);
             });
         }
@@ -251,19 +230,18 @@ namespace Lab9.Controllers
             return userId;
         }
 
-        public IActionResult AddToCart(int productId)
+        public async Task<IActionResult> AddToCart(int productId)
         {
-            string? userCookie = Request.Cookies["user"];
-            if (userCookie == null || userCookie == "")
-            {
-                return View("Authorization");
-            }
-            if (userCookie.StartsWith("seller"))
+            if (!CheckAuthorization("customer"))
             {
                 return View("ErrorMessage", "Register as customer");
             }
-            int customerId = int.Parse(userCookie.Split("-")[1]);
-            _ = AddToAddedToCartAsync(productId, customerId);
+            int customerId = AuthorizationJWT.GetIdOfCurrentUser(Request.Cookies["token"], JsonConvert.DeserializeObject<byte[]>(Request.Cookies["key"]));
+            if (customerId == -1)
+            {
+                return View("ErrorMessage", "Register as customer");
+            }
+            await AddToAddedToCartAsync(productId, customerId);
             ProductViewModel model = new ProductViewModel()
             {
                 Products = Context.Products.ToList(),
@@ -275,12 +253,15 @@ namespace Lab9.Controllers
 
         public async Task AddToAddedToCartAsync(int productId, int customerId)
         {
-            Context.AddedToCartProducts.Add(new AddedToCartProduct()
+            lock (Context)
             {
-                CustomerId = customerId,
-                ProductId = productId,
-                DateTime = DateTime.Now
-            });
+                Context.AddedToCartProducts.Add(new AddedToCartProduct()
+                {
+                    CustomerId = customerId,
+                    ProductId = productId,
+                    DateTime = DateTime.Now
+                });
+            }
             await Context.SaveChangesAsync();
         }
 
@@ -302,9 +283,12 @@ namespace Lab9.Controllers
         }
 
         [HttpGet]
-        [CustomerAuthorize]
         public IActionResult ProductDetails(int productId)
         {
+            if (!CheckAuthorization("customer"))
+            {
+                return View("ErrorMessage", "Register as customer!");
+            }
             ProductDetailsViewModel model = new ProductDetailsViewModel()
             {
                 Product = Context.Products.First(x => x.Id == productId),
@@ -324,23 +308,12 @@ namespace Lab9.Controllers
 
             return View(model);
         }
-    }
-}
 
-public class CustomerAuthorizeAttribute : Attribute, IAuthorizationFilter
-{
-    public void OnAuthorization(AuthorizationFilterContext context)
-    {
-        if (!context.HttpContext.User.Identity.IsAuthenticated)
+        private bool CheckAuthorization(string role)
         {
-            context.Result = new UnauthorizedResult();
-            return;
-        }
-
-        if (!context.HttpContext.User.IsInRole("customer"))
-        {
-            context.Result = new ForbidResult();
-            return;
+            string tokenStr = Request.Cookies["token"];
+            string keyStr = Request.Cookies["key"];
+            return AuthorizationJWT.CheckAuthorization(tokenStr, keyStr, role);
         }
     }
 }
