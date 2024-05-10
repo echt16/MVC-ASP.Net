@@ -270,21 +270,21 @@ namespace Lab9.Controllers
                 return View("ErrorMessage", "Register as customer!");
             }
             int customerId = AuthorizationJWT.GetIdOfCurrentUser(Request.Cookies["token"], Request.Cookies["key"]);
-            CartViewModal modal = new CartViewModal()
+            CartViewModal model = new CartViewModal()
             {
                 AddedToCartProducts = Context.AddedToCartProducts.Where(x => x.CustomerId == customerId).ToList()
             };
-            for (int i = 0; i < modal.AddedToCartProducts.Count; i++)
+            for (int i = 0; i < model.AddedToCartProducts.Count; i++)
             {
-                Product product = Context.Products.First(x => x.Id == modal.AddedToCartProducts[i].ProductId);
-                modal.Products.Add(product);
+                Product product = Context.Products.First(x => x.Id == model.AddedToCartProducts[i].ProductId);
+                model.Products.Add(product);
                 Seller seller = Context.Sellers.First(x => x.Id == product.SellerId);
                 User user = Context.Users.First(x => x.Id == seller.UserId);
-                modal.Sellers.Add(user);
-                modal.IsConsired.Add(true);
+                model.Sellers.Add(user);
+                model.IsConsired.Add(true);
             }
-            modal.Sum = modal.Products.Select(x => x.Price).Sum();
-            return View(modal);
+            model.Sum = model.Products.Select(x => x.Price).Sum();
+            return View(model);
         }
 
         [HttpPost]
@@ -293,31 +293,31 @@ namespace Lab9.Controllers
             int customerId = AuthorizationJWT.GetIdOfCurrentUser(Request.Cookies["token"], Request.Cookies["key"]);
             if (hiddenInput == "Refresh")
             {
-                CartViewModal modal = new CartViewModal()
+                CartViewModal model = new CartViewModal()
                 {
                     AddedToCartProducts = Context.AddedToCartProducts.Where(x => x.CustomerId == customerId).ToList()
                 };
                 double sum = 0;
-                for (int i = 0; i < modal.AddedToCartProducts.Count; i++)
+                for (int i = 0; i < model.AddedToCartProducts.Count; i++)
                 {
-                    Product product = Context.Products.First(x => x.Id == modal.AddedToCartProducts[i].ProductId);
-                    modal.Products.Add(product);
+                    Product product = Context.Products.First(x => x.Id == model.AddedToCartProducts[i].ProductId);
+                    model.Products.Add(product);
                     Seller seller = Context.Sellers.First(x => x.Id == product.SellerId);
                     User user = Context.Users.First(x => x.Id == seller.UserId);
-                    modal.Sellers.Add(user);
+                    model.Sellers.Add(user);
 
-                    if (isConsired.Contains(modal.AddedToCartProducts[i].Id))
+                    if (isConsired.Contains(model.AddedToCartProducts[i].Id))
                     {
-                        modal.IsConsired.Add(true);
+                        model.IsConsired.Add(true);
                         sum += product.Price;
                     }
                     else
                     {
-                        modal.IsConsired.Add(false);
+                        model.IsConsired.Add(false);
                     }
                 }
-                modal.Sum = sum;
-                return View(modal);
+                model.Sum = sum;
+                return View(model);
             }
             else if (hiddenInput == "Checkout")
             {
@@ -334,21 +334,21 @@ namespace Lab9.Controllers
                     Context.AddedToCartProducts.Remove(item);
                 }
                 await Context.SaveChangesAsync();
-                CartViewModal modal = new CartViewModal()
+                CartViewModal model = new CartViewModal()
                 {
                     AddedToCartProducts = Context.AddedToCartProducts.Where(x => x.CustomerId == customerId).ToList()
                 };
-                for (int i = 0; i < modal.AddedToCartProducts.Count; i++)
+                for (int i = 0; i < model.AddedToCartProducts.Count; i++)
                 {
-                    Product product = Context.Products.First(x => x.Id == modal.AddedToCartProducts[i].ProductId);
-                    modal.Products.Add(product);
+                    Product product = Context.Products.First(x => x.Id == model.AddedToCartProducts[i].ProductId);
+                    model.Products.Add(product);
                     Seller seller = Context.Sellers.First(x => x.Id == product.SellerId);
                     User user = Context.Users.First(x => x.Id == seller.UserId);
-                    modal.Sellers.Add(user);
-                    modal.IsConsired.Add(false);
+                    model.Sellers.Add(user);
+                    model.IsConsired.Add(false);
                 }
-                modal.Sum = 0;
-                return View(modal);
+                model.Sum = 0;
+                return View(model);
             }
             return View("ErrorMessage", "Error");
         }
@@ -358,21 +358,21 @@ namespace Lab9.Controllers
             Context.AddedToCartProducts.Remove(Context.AddedToCartProducts.First(x => x.Id == productId));
             Context.SaveChanges();
             int customerId = AuthorizationJWT.GetIdOfCurrentUser(Request.Cookies["token"], Request.Cookies["key"]);
-            CartViewModal modal = new CartViewModal()
+            CartViewModal model = new CartViewModal()
             {
                 AddedToCartProducts = Context.AddedToCartProducts.Where(x => x.CustomerId == customerId).ToList()
             };
-            for (int i = 0; i < modal.AddedToCartProducts.Count; i++)
+            for (int i = 0; i < model.AddedToCartProducts.Count; i++)
             {
-                Product product = Context.Products.First(x => x.Id == modal.AddedToCartProducts[i].ProductId);
-                modal.Products.Add(product);
+                Product product = Context.Products.First(x => x.Id == model.AddedToCartProducts[i].ProductId);
+                model.Products.Add(product);
                 Seller seller = Context.Sellers.First(x => x.Id == product.SellerId);
                 User user = Context.Users.First(x => x.Id == seller.UserId);
-                modal.Sellers.Add(user);
-                modal.IsConsired.Add(true);
+                model.Sellers.Add(user);
+                model.IsConsired.Add(true);
             }
-            modal.Sum = modal.Products.Select(x => x.Price).Sum();
-            return View("CustomerCart", modal);
+            model.Sum = model.Products.Select(x => x.Price).Sum();
+            return View("CustomerCart", model);
         }
 
         [HttpGet]
@@ -383,20 +383,43 @@ namespace Lab9.Controllers
                 return View("ErrorMessage", "Register as customer!");
             }
             int customerId = AuthorizationJWT.GetIdOfCurrentUser(Request.Cookies["token"], Request.Cookies["key"]);
-            DealsViewModal modal = new DealsViewModal()
+            DealsViewModal model = new DealsViewModal()
             {
                 Deals = Context.Deals.Where(x => x.CustomerId == customerId).ToList()
             };
-            for (int i = 0; i < modal.Deals.Count; i++)
+            for (int i = 0; i < model.Deals.Count; i++)
             {
-                Product product = Context.Products.First(x => x.Id == modal.Deals[i].ProductId);
-                modal.Products.Add(product);
+                Product product = Context.Products.First(x => x.Id == model.Deals[i].ProductId);
+                model.Products.Add(product);
                 Seller seller = Context.Sellers.First(x => x.Id == product.SellerId);
                 User user = Context.Users.First(x => x.Id == seller.UserId);
-                modal.Sellers.Add(user);
+                model.Sellers.Add(user);
             }
-            modal.Sum = modal.Products.Select(x => x.Price).Sum();
-            return View(modal);
+            model.Sum = model.Products.Select(x => x.Price).Sum();
+            return View(model);
+        }
+
+        public IActionResult Account()
+        {
+            UserView umodel = AuthorizationJWT.GetCurrentUser(Request.Cookies["token"], Request.Cookies["key"]);
+            if (umodel == null)
+                return View("ErrorMessage", "Register!");
+            AccountViewModel model = new AccountViewModel();
+            User user = null;
+            if (umodel.Role == "customer")
+            {
+                user = Context.Users.First(x => x.Id == Context.Customers.First(x => x.Id == umodel.Id).UserId);
+            }
+            else if (umodel.Role == "seller")
+            {
+                user = Context.Users.First(x => x.Id == Context.Sellers.First(x => x.Id == umodel.Id).UserId);
+            }
+            model.Firstname = user.FirstName;
+            model.Lastname = user.LastName;
+            LoginPassword lp = Context.LoginsPasswords.First(x => x.Id == user.LoginPasswordId);
+            model.Login = lp.Login;
+            model.Password = lp.Password;
+            return View(model);
         }
 
         private bool CheckAuthorization(string role)

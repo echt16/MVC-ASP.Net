@@ -58,7 +58,7 @@ public class AuthorizationJWT
         }
     }
 
-    internal static AccountViewModel GetCurrentUser(string token, string secretKey)
+    internal static UserView GetCurrentUser(string token, string secretKey)
     {
         try
         {
@@ -76,7 +76,7 @@ public class AuthorizationJWT
 
             SecurityToken securityToken;
             var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-            return new AccountViewModel() { Id = int.Parse(principal.Claims.ElementAt(0).Value), Role = principal.Claims.ElementAt(1).Value };
+            return new UserView() { Id = int.Parse(principal.Claims.ElementAt(0).Value), Role = principal.Claims.ElementAt(1).Value };
         }
         catch (Exception ex)
         {

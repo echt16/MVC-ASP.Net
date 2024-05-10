@@ -2517,7 +2517,7 @@
    * --------------------------------------------------------------------------
    */
   const Default$7 = {
-    className: 'modal-backdrop',
+    className: 'model-backdrop',
     isVisible: true,
     // if false, we use the backdrop helper without adding any element to the dom
     isAnimated: false,
@@ -2739,7 +2739,7 @@
 
   /**
    * --------------------------------------------------------------------------
-   * Bootstrap (v5.1.0): modal.js
+   * Bootstrap (v5.1.0): model.js
    * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
    * --------------------------------------------------------------------------
    */
@@ -2749,8 +2749,8 @@
    * ------------------------------------------------------------------------
    */
 
-  const NAME$6 = 'modal';
-  const DATA_KEY$6 = 'bs.modal';
+  const NAME$6 = 'model';
+  const DATA_KEY$6 = 'bs.model';
   const EVENT_KEY$6 = `.${DATA_KEY$6}`;
   const DATA_API_KEY$3 = '.data-api';
   const ESCAPE_KEY$1 = 'Escape';
@@ -2775,20 +2775,20 @@
   const EVENT_MOUSEUP_DISMISS = `mouseup.dismiss${EVENT_KEY$6}`;
   const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY$6}`;
   const EVENT_CLICK_DATA_API$2 = `click${EVENT_KEY$6}${DATA_API_KEY$3}`;
-  const CLASS_NAME_OPEN = 'modal-open';
+  const CLASS_NAME_OPEN = 'model-open';
   const CLASS_NAME_FADE$3 = 'fade';
   const CLASS_NAME_SHOW$4 = 'show';
-  const CLASS_NAME_STATIC = 'modal-static';
-  const SELECTOR_DIALOG = '.modal-dialog';
-  const SELECTOR_MODAL_BODY = '.modal-body';
-  const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="modal"]';
+  const CLASS_NAME_STATIC = 'model-static';
+  const SELECTOR_DIALOG = '.model-dialog';
+  const SELECTOR_MODAL_BODY = '.model-body';
+  const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="model"]';
   /**
    * ------------------------------------------------------------------------
    * Class Definition
    * ------------------------------------------------------------------------
    */
 
-  class Modal extends BaseComponent {
+  class model extends BaseComponent {
     constructor(element, config) {
       super(element);
       this._config = this._getConfig(config);
@@ -2932,7 +2932,7 @@
       const modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
 
       if (!this._element.parentNode || this._element.parentNode.nodeType !== Node.ELEMENT_NODE) {
-        // Don't move modal's DOM position
+        // Don't move model's DOM position
         document.body.append(this._element);
       }
 
@@ -2940,7 +2940,7 @@
 
       this._element.removeAttribute('aria-hidden');
 
-      this._element.setAttribute('aria-modal', true);
+      this._element.setAttribute('aria-model', true);
 
       this._element.setAttribute('role', 'dialog');
 
@@ -2998,7 +2998,7 @@
 
       this._element.setAttribute('aria-hidden', true);
 
-      this._element.removeAttribute('aria-modal');
+      this._element.removeAttribute('aria-model');
 
       this._element.removeAttribute('role');
 
@@ -3104,7 +3104,7 @@
 
     static jQueryInterface(config, relatedTarget) {
       return this.each(function () {
-        const data = Modal.getOrCreateInstance(this, config);
+        const data = model.getOrCreateInstance(this, config);
 
         if (typeof config !== 'string') {
           return;
@@ -3135,7 +3135,7 @@
 
     EventHandler.one(target, EVENT_SHOW$3, showEvent => {
       if (showEvent.defaultPrevented) {
-        // only register focus restorer if modal will actually get shown
+        // only register focus restorer if model will actually get shown
         return;
       }
 
@@ -3145,18 +3145,18 @@
         }
       });
     });
-    const data = Modal.getOrCreateInstance(target);
+    const data = model.getOrCreateInstance(target);
     data.toggle(this);
   });
-  enableDismissTrigger(Modal);
+  enableDismissTrigger(model);
   /**
    * ------------------------------------------------------------------------
    * jQuery
    * ------------------------------------------------------------------------
-   * add .Modal to jQuery only if jQuery is present
+   * add .model to jQuery only if jQuery is present
    */
 
-  defineJQueryPlugin(Modal);
+  defineJQueryPlugin(model);
 
   /**
    * --------------------------------------------------------------------------
@@ -3251,7 +3251,7 @@
 
       this._element.removeAttribute('aria-hidden');
 
-      this._element.setAttribute('aria-modal', true);
+      this._element.setAttribute('aria-model', true);
 
       this._element.setAttribute('role', 'dialog');
 
@@ -3294,7 +3294,7 @@
       const completeCallback = () => {
         this._element.setAttribute('aria-hidden', true);
 
-        this._element.removeAttribute('aria-modal');
+        this._element.removeAttribute('aria-model');
 
         this._element.removeAttribute('role');
 
@@ -3602,13 +3602,13 @@
     MOUSELEAVE: `mouseleave${EVENT_KEY$4}`
   };
   const CLASS_NAME_FADE$2 = 'fade';
-  const CLASS_NAME_MODAL = 'modal';
+  const CLASS_NAME_MODAL = 'model';
   const CLASS_NAME_SHOW$2 = 'show';
   const HOVER_STATE_SHOW = 'show';
   const HOVER_STATE_OUT = 'out';
   const SELECTOR_TOOLTIP_INNER = '.tooltip-inner';
   const SELECTOR_MODAL = `.${CLASS_NAME_MODAL}`;
-  const EVENT_MODAL_HIDE = 'hide.bs.modal';
+  const EVENT_MODAL_HIDE = 'hide.bs.model';
   const TRIGGER_HOVER = 'hover';
   const TRIGGER_FOCUS = 'focus';
   const TRIGGER_CLICK = 'click';
@@ -5011,7 +5011,7 @@
     Carousel,
     Collapse,
     Dropdown,
-    Modal,
+    model,
     Offcanvas,
     Popover,
     ScrollSpy,
