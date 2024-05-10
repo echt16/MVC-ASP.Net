@@ -5,10 +5,28 @@
 @{
 }
 
+<style>
+    a.auxiliary-btn {
+        display: inline-block;
+        padding: 10px 30px;
+        text-decoration: none;
+        text-transform: uppercase;
+        color: #fff;
+        border-radius: 5px;
+        width:80%;
+        text-align:center;
+    }
+</style>
+
 <div class="in-full-screen modal-background p-absolute br-50">
     @if (Model != "" && Model != null)
     {
         <p class="alert alert-danger error-message text-center" style="border-top-left-radius: 50px;border-top-right-radius: 50px;">@Model</p>
     }
+    @if (Model.StartsWith("Register"))
+    {
+        <div class="d-flex align-items-end justify-content-center in-full-screen">
+            <a class="bg-green auxiliary-btn" asp-controller="Home" asp-action="Authorization">Authorization</a>
+        </div>
+    }
 </div>
-

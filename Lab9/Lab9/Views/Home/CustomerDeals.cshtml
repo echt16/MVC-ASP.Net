@@ -1,0 +1,63 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model DealsViewModal
+@{
+}
+
+<div class="in-full-screen modal-background p-absolute br-50">
+</div>
+
+<div class="cart-container in-full-screen">
+    <p class="cart-title text-center">Deals</p>
+    <div class="cart-info">
+        <div class="cart-total">
+            <div>
+                Total price: @Model.Sum
+            </div>
+        </div>
+    </div>
+    <div class="cart-products">
+        <table>
+            <tr>
+                <th>Image</th>
+                <th>Product</th>
+                <th>Seller</th>
+                <th>Price</th>
+                <th>Date</th>
+            </tr>
+
+
+            @for (int i = 0; i < Model.Products.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <div class="td-item">
+                            <img src="@Model.Products[i].LogoSource" alt="product" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-item">
+                            @Model.Products[i].Name
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-item">
+                            @(Model.Sellers[i].FirstName + " " + Model.Sellers[i].LastName)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-item">
+                            @Model.Products[i].Price
+                        </div>
+                    </td>
+                    <td>
+                        <div class="td-item">
+                            @Model.Deals[i].DateTime.ToString(@"dd.MM-HH:mm")
+                        </div>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

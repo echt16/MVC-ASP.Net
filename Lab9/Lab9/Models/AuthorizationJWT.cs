@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Lab9.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -11,10 +12,10 @@ using System.Text;
 
 public class AuthorizationJWT
 {
-    public static ClaimsPrincipal DecodeToken(string token, byte[] secretKey)
+    internal static ClaimsPrincipal DecodeToken(string token, string secretKey)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = secretKey;
+        byte[] key = JsonConvert.DeserializeObject<byte[]>(secretKey) ?? new byte[0];
 
         var tokenValidationParameters = new TokenValidationParameters
         {
@@ -31,12 +32,12 @@ public class AuthorizationJWT
         return principal;
     }
 
-    public static int GetIdOfCurrentUser(string token, byte[] secretKey)
+    internal static int GetIdOfCurrentUser(string token, string secretKey)
     {
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = secretKey;
+            byte[] key = JsonConvert.DeserializeObject<byte[]>(secretKey) ?? new byte[0];
 
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -57,7 +58,33 @@ public class AuthorizationJWT
         }
     }
 
-    public static bool CheckAuthorization(string tokenStr, string keyStr, string role)
+    internal static AccountViewModel GetCurrentUser(string token, string secretKey)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            byte[] key = JsonConvert.DeserializeObject<byte[]>(secretKey) ?? new byte[0];
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false
+            };
+
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            return new AccountViewModel() { Id = int.Parse(principal.Claims.ElementAt(0).Value), Role = principal.Claims.ElementAt(1).Value };
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    internal static bool CheckAuthorization(string tokenStr, string keyStr, string role)
     {
         try
         {
@@ -66,8 +93,7 @@ public class AuthorizationJWT
                 return false;
             }
 
-            byte[] key = JsonConvert.DeserializeObject<byte[]>(keyStr) ?? new byte[0];
-            ClaimsPrincipal claimsPrincipal = DecodeToken(tokenStr, key);
+            ClaimsPrincipal claimsPrincipal = DecodeToken(tokenStr, keyStr);
             return claimsPrincipal.IsInRole(role);
         }
         catch (Exception ex)
@@ -76,7 +102,7 @@ public class AuthorizationJWT
         }
     }
 
-    public static List<object> GenerateToken(int userId, string role)
+    internal static List<object> GenerateToken(int userId, string role)
     {
         var claims = new[]
         {
@@ -97,7 +123,7 @@ public class AuthorizationJWT
         return new List<object>() { tokenHandler.WriteToken(token), key };
     }
 
-    public static string GenerateRandomSecretKey(int length)
+    private static string GenerateRandomSecretKey(int length)
     {
         const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder stringBuilder = new StringBuilder();

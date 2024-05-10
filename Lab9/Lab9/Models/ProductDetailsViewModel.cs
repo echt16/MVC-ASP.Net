@@ -8,5 +8,9 @@
         public string Kind { get; set; }
         public string Category { get; set; }    
         public User Seller {  get; set; }
+        public ProductDetailsViewModel()
+        {
+            Photos = new List<Photo>(); 
+        }
     }
 }

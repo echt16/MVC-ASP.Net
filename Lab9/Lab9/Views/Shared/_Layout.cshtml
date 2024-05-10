@@ -1,4 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using Lab9.Models;
+
+@{
+    string token = Context.Request.Cookies["token"] ?? "";
+    string key = Context.Request.Cookies["key"] ?? "";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -12,7 +19,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Lab9</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,10 +29,35 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Authorization">Home</a>
-                        </li>
+                        @if (AuthorizationJWT.CheckAuthorization(token, key, "customer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CustomerCart">My cart</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CustomerDeals">My deals</a>
+                            </li>
+                        }
+                        else if (AuthorizationJWT.CheckAuthorization(token, key, "seller"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SellerProducts">My products</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SellerDeals">My deals</a>
+                            </li>
+                        }
                     </ul>
+                    @if (token == "" || key == "")
+                    {
+                        <div class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Authorization">Login</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Account">Account</a>
+                    }
                 </div>
             </div>
         </nav>
@@ -39,34 +71,22 @@
     <footer class="border-top footer text-muted">
         <div class="container d-flex justify-content-between align-items-center">
             <span>&copy; 2024 - Lab9 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a></span>
-            <button class="btn btn-primary h-50">Exit</button>
+            <button class="btn btn-primary h-50" onclick="exit()">
+                Exit
+            </button>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script name="Scripts">
-        function getCookieValue(cookieName) {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i];
-                while (cookie.charAt(0) == ' ') {
-                    cookie = cookie.substring(1);
-                }
-                if (cookie.indexOf(cookieName + '=') == 0) {
-                    return cookie.substring(cookieName.length + 1, cookie.length);
-                }
-            }
-            return "";
+        function exit() {
+            deleteCookie("token");
+            deleteCookie("key");
+            location.href = location.href;
         }
-
-        if (getCookieValue("user").startsWith("seller")) {
-            if (document.querySelector("#navbar-nav").children.length == 2) {
-                document.querySelector("#navbar-nav").innerHTML += `
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Authorization">Authorization</a>
-                    </li>`;
-            }
+        function deleteCookie(cookieName) {
+            document.cookie = cookieName + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
