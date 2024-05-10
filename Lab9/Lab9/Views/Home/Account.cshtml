@@ -3,29 +3,71 @@
 *@
 @model AccountViewModel
 
-<div class="in-full-screen model-background p-absolute br-50 ">
-</div>
-
-<div class="account-main in-full-screen">
-    <div class="account-container">
-        <div>
-            <div>
-                Firstname: @Model.Firstname
-            </div>
-            <div>
-                Lastname: @Model.Lastname
+<div class="in-full-screen model-background p-absolute br-50 text-center">
+    <div id="account-info">
+        <div class="account-main in-full-screen">
+            <div class="account-container">
+                <div>
+                    <div>
+                        Firstname: @Model.Firstname
+                    </div>
+                    <div>
+                        Lastname: @Model.Lastname
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        Login: @Model.Login
+                    </div>
+                    <div>
+                        Password:  @for (int i = 0; i < Model.Password.Length; i++)
+                        {
+                            <span>*</span>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
-        <div>
-            <div>
-                Login: @Model.Login
-            </div>
-            <div>
-                Password: @for (int i = 0; i < Model.Password.Length; i++)
-                {
-                    <span>*</span>
-                }
-            </div>
+        <button class="btn btn-primary" onclick="change()">Change</button>
+    </div>
+
+    <div class="in-full-screen model-window p-absolute p-2" id="modalWindow">
+        <div class="row justify-content-center  bg-transparent">
+            <form method="post" action="AccountChange">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" class="form-control" name="email" placeholder="Enter email" required>
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" class="form-control" name="password" placeholder="Enter password" required>
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="firstname">Firstname</label>
+                    <input type="email" class="form-control" name="firstname" placeholder="Enter firstname" required>
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="lastname">Lastname</label>
+                    <input type="password" class="form-control" name="lastname" placeholder="Enter lastname" required>
+                </div>
+                <br />
+                <button type="submit" class="btn" style="background-color: rgb(64, 179, 162); width:100%;">Save</button>
+            </form>
         </div>
     </div>
 </div>
+
+<script name="Scripts">
+    document.querySelector("#modalWindow").style.display = "none";
+    function change() {
+        document.getElementsByName("email").value = @Model.Login;
+        document.getElementsByName("password").value = @Model.Password;
+        document.getElementsByName("firstname").value = @Model.Firstname;
+        document.getElementsByName("lastname").value = @Model.Lastname;
+        document.querySelector("#account-info").style.display = "none";
+        document.querySelector("#modalWindow").style.display = "block";
+    }
+</script>
